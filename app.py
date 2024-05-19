@@ -6,29 +6,93 @@ from selenium.webdriver.support import expected_conditions as EC
 # Create a new instance of the Chrome driver
 driver = webdriver.Chrome()
 
-# Navigate to the initial page
-driver.get("https://www.onthesnow.com/canada/ski-resorts")
+# Navigate to the Whistler Blackcomb page
+driver.get("https://www.onthesnow.com/british-columbia/whistler-blackcomb/ski-resort")
 
-# Wait for the button to be present
-wait = WebDriverWait(driver, 10)
-button = wait.until(EC.presence_of_element_located((By.XPATH, "//*[@id='__next']/div[6]/div[2]/div/div[1]/div/button")))
+def extract_box_info(title_xpath, metric_xpath=None):
+    # Wait for the title element to be present
+    title_element = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, title_xpath))
+    )
+    title_text = title_element.text
+    print("Title:", title_text)
 
-# Click the button
-button.click()
+    # Check if the metric_xpath is provided
+    if metric_xpath:
+        # Wait for the metric element to be present
+        metric_element = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, metric_xpath))
+        )
+        metric_text = metric_element.text
+        print("Metric Value:", metric_text)
+    else:
+        print("No metric value available.")
 
-# Wait for the parent div to be present
-parent_div = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#__next > div.container-xl.content-container > div.styles__layout__2aTIJ.layout-container > div > div.md-hide.m-0 > div > article > div.styles__box__1sXJN.styles__resortsList__3pFyu")))
+# Extract information for beginner runs
+beginner_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[1]/div[2]"
+beginner_metric_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[1]/div[3]"
+extract_box_info(beginner_title_xpath, beginner_metric_xpath)
 
-# Loop through the two child divs
-for i in range(1, 3):
-    # Find the child div
-    child_div = parent_div.find_element(By.CSS_SELECTOR, f"div:nth-child({i})")
+# Extract information for intermediate runs
+intermediate_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[3]/div[2]"
+intermediate_metric_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[2]/div[3]"
+extract_box_info(intermediate_title_xpath, intermediate_metric_xpath)
 
-    # Find the link inside the child div
-    link_element = child_div.find_element(By.CSS_SELECTOR, "div:nth-child(1) > a")
+# Extract information for advanced runs
+advanced_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[3]/div[2]"
+advanced_metric_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[3]/div[3]"
+extract_box_info(advanced_title_xpath, advanced_metric_xpath)
 
-    # Print the text of the link
-    print(link_element.text)
+# Extract information for expert runs
+expert_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[4]/div[2]"
+expert_metric_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[4]/div[3]"
+extract_box_info(expert_title_xpath, expert_metric_xpath)
 
-# Close the browser
+# Extract information for runs total
+runs_in_total_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[5]/div[2]"
+runs_in_total_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[5]/div[3]"
+extract_box_info(runs_in_total_xpath, runs_in_total_value_xpath)
+
+
+# Extract information for longest run total
+runs_in_total_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[5]/div[2]"
+runs_in_total_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[5]/div[3]"
+extract_box_info(runs_in_total_xpath, runs_in_total_value_xpath)
+
+# Extract information for skiable terrain total
+skiable_terrain_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[7]/div[2]"
+skiable_terrain_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[7]/div[3]"
+extract_box_info(skiable_terrain_title_xpath, skiable_terrain_value_xpath)
+
+# Extract information for snow making total
+snow_making_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[8]/div[2]"
+snow_making_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[7]/div[3]"
+extract_box_info(snow_making_title_xpath, snow_making_value_xpath)
+
+
+# Extract information for snow making total
+base_elevation_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[6]/article/div[2]/div[2]"
+base_elevation_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[6]/article/div[2]/div[3]"
+extract_box_info(base_elevation_title_xpath, base_elevation_value_xpath)
+
+# Extract information for snow making total
+summit_elevation_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[6]/article/div[3]/div[2]"
+summit_elevation_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[6]/article/div[3]/div[3]"
+extract_box_info(summit_elevation_title_xpath, summit_elevation_value_xpath)
+
+# Extract information for snow making total
+vertical_elevation_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[6]/article/div[4]/div[2]"
+vertical_elevation_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[6]/article/div[4]/div[3]"
+extract_box_info(vertical_elevation_title_xpath, vertical_elevation_value_xpath)
+
+
+# Extract information for snow making total
+vertical_elevation_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[6]/article/div[4]/div[2]"
+vertical_elevation_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[6]/article/div[4]/div[3]"
+extract_box_info(vertical_elevation_title_xpath, vertical_elevation_value_xpath)
+
+# Extract information for snow making total
+important_dates_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[8]/article/div[1]/h3"
+extract_box_info(important_dates_xpath)
+
 driver.quit()
