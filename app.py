@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import json
 import re
-
+from selenium.common.exceptions import TimeoutException
 app = Flask(__name__)
 
 
@@ -26,20 +26,27 @@ def get_ski_resort_data():
     driver.get(url)
 
     def extract_box_info(title_xpath, metric_xpath=None):
-        # Wait for the title element to be present
-        title_element = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, title_xpath))
-        )
-        title_text = title_element.text
+        title_text = None
+        metric_text = None
+
+        try:
+            # Wait for the title element to be present
+            title_element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, title_xpath))
+            )
+            title_text = title_element.text
+        except TimeoutException:
+            print(f"Title element not found: {title_xpath}")
 
         if metric_xpath:
-            # Wait for the metric element to be present
-            metric_element = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, metric_xpath))
-            )
-            metric_text = metric_element.text
-        else:
-            metric_text = None
+            try:
+                # Wait for the metric element to be present
+                metric_element = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.XPATH, metric_xpath))
+                )
+                metric_text = metric_element.text
+            except TimeoutException:
+                print(f"Metric element not found: {metric_xpath}")
 
         return title_text, metric_text
 
@@ -96,7 +103,7 @@ def get_ski_resort_data():
         skiable_terrain_title_xpath, skiable_terrain_value_xpath)
 
     # Extract information for snow making total
-    snow_making_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[9]/div[2]"
+    snow_making_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[8]/div[2]"
     snow_making_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[8]/div[3]"
     snow_making_title, snow_making_metric = extract_box_info(
         snow_making_title_xpath, snow_making_value_xpath)
