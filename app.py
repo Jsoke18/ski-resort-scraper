@@ -78,7 +78,8 @@ def get_ski_resort_data():
 
     # Extract information for resort info
     total_lifts_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[5]/article/div[1]/h3"
-    total_lifts_xpath, _ = extract_box_info(total_lifts_xpath)
+    total_lifts_value, _ = extract_box_info(total_lifts_xpath)
+    total_lifts_cleaned = re.sub(r'[^0-9]', '', total_lifts_value)
 
     # Extract information for runs total
     runs_in_total_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[5]/div[2]"
@@ -228,7 +229,7 @@ def get_ski_resort_data():
         'years_open': {'title': clean_data(years_open_title), 'metric': clean_data(years_open_metric)},
         'days_open_last_year': {'title': clean_data(days_open_last_year_title), 'metric': clean_data(days_open_last_year_metric)},
         'resort_info': {'title': clean_data(resort_info)},
-        'total_lifts': {'title': clean_data(total_lifts_xpath)},
+        'total_lifts': {'metric': clean_data(total_lifts_cleaned)},
         'projected_opening': {'title': clean_data(projected_opening_title_xpath), 'metric': clean_data(projected_opening_value_xpath)},
         'projected_closing': {'title': clean_data(projected_closing_title_xpath), 'metric': clean_data(projected_closing_value_xpath)},
         'phone_number': {'title': clean_data(phone_number_xpath)},
