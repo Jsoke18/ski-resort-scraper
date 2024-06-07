@@ -25,146 +25,170 @@ def get_ski_resort_data():
     # Navigate to the specified URL
     driver.get(url)
 
-    def extract_box_info(title_xpath, metric_xpath=None):
+    def extract_box_info(title_selector, metric_selector=None, by=By.XPATH):
         title_text = None
         metric_text = None
 
         try:
-            # Wait for the title element to be present
-            title_element = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, title_xpath))
+            # Wait for the title element to be present (up to 5 seconds)
+            title_element = WebDriverWait(driver, 5).until(
+                EC.presence_of_element_located((by, title_selector))
             )
             title_text = title_element.text
         except TimeoutException:
-            print(f"Title element not found: {title_xpath}")
+            print(f"Title element not found: {title_selector}")
 
-        if metric_xpath:
+        if metric_selector:
             try:
-                # Wait for the metric element to be present
-                metric_element = WebDriverWait(driver, 10).until(
-                    EC.presence_of_element_located((By.XPATH, metric_xpath))
+                # Wait for the metric element to be present (up to 5 seconds)
+                metric_element = WebDriverWait(driver, 5).until(
+                    EC.presence_of_element_located((by, metric_selector))
                 )
                 metric_text = metric_element.text
             except TimeoutException:
-                print(f"Metric element not found: {metric_xpath}")
+                print(f"Metric element not found: {metric_selector}")
 
         return title_text, metric_text
 
     # Extract information for beginner runs
-    beginner_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[1]/div[2]"
-    beginner_metric_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[1]/div[3]"
-    beginner_title, beginner_metric = extract_box_info(
-        beginner_title_xpath, beginner_metric_xpath)
+    beginner_title_css = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div.styles_box__1BTY2.slopesColors_fillGreen__25hpD > div.styles_title__23khW"
+    beginner_metric_css = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div.styles_box__1BTY2.slopesColors_fillGreen__25hpD > div.styles_metric__14Z7T"
+    beginner_title, beginner_metric = extract_box_info(beginner_title_css, beginner_metric_css, by=By.CSS_SELECTOR)
+    # Print the extracted values for beginner runs
+    print("Beginner Runs:")
+    print("Title:", beginner_title)
+    print("Metric:", beginner_metric)
 
     # Extract information for intermediate runs
-    intermediate_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[3]/div[2]"
-    intermediate_metric_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[2]/div[3]"
-    intermediate_title, intermediate_metric = extract_box_info(
-        intermediate_title_xpath, intermediate_metric_xpath)
+    intermediate_title_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div.styles_box__1BTY2.slopesColors_fillPrimary__3XIND > div.styles_title__23khW"
+    intermediate_metric_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div.styles_box__1BTY2.slopesColors_fillPrimary__3XIND > div.styles_metric__14Z7T"
+    intermediate_title, intermediate_metric = extract_box_info(intermediate_title_xpath, intermediate_metric_xpath, by=By.CSS_SELECTOR)
+    print("Title:", intermediate_title)
+    print("Metric:", intermediate_metric)
 
     # Extract information for advanced runs
-    advanced_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[3]/div[2]"
-    advanced_metric_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[3]/div[3]"
-    advanced_title, advanced_metric = extract_box_info(
-        advanced_title_xpath, advanced_metric_xpath)
+    advanced_title_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div:nth-child(3) > div.styles_title__23khW"
+    advanced_metric_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div:nth-child(3) > div.styles_metric__14Z7T"
+    advanced_title, advanced_metric = extract_box_info(advanced_title_xpath, advanced_metric_xpath, by=By.CSS_SELECTOR)
+    print("Title:", advanced_title)
+    print("Metric:", advanced_metric)
     # Extract information for resort info
-    resort_info_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[2]/div[2]/div[1]"
-    resort_info, _ = extract_box_info(resort_info_xpath)
+    resort_info_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_descriptionTabs__3eDit > div.styles_description__16DzX > div.styles_readMoreDescription__2OTyA.styles_wrap__u6bah.styles_active__1wotC.styles_collapsed__3HOrO"
+    resort_info, _ = extract_box_info(resort_info_xpath, by=By.CSS_SELECTOR)
+    print("Title:", resort_info)
     # Extract information for expert runs
-    expert_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[4]/div[2]"
-    expert_metric_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[4]/div[3]"
+    expert_title_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div:nth-child(4) > div.styles_title__23khW"
+    expert_metric_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div:nth-child(4) > div.styles_metric__14Z7T"
     expert_title, expert_metric = extract_box_info(
-        expert_title_xpath, expert_metric_xpath)
-
+        expert_title_xpath, expert_metric_xpath, by=By.CSS_SELECTOR)
+    print("Title:", expert_title)
+    print("Metric:", expert_metric)
     # Extract information for resort info
-    total_lifts_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[5]/article/div[1]/h3"
-    total_lifts_value, _ = extract_box_info(total_lifts_xpath)
+    total_lifts_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div:nth-child(7) > article > div.styles_box__m1CLQ > h3"
+    total_lifts_value, _ = extract_box_info(total_lifts_xpath, by=By.CSS_SELECTOR)
     total_lifts_cleaned = re.sub(r'[^0-9]', '', total_lifts_value)
-
+    print('total lifts')
+    print("Metric:", total_lifts_value)
     # Extract information for runs total
-    runs_in_total_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[5]/div[2]"
-    runs_in_total_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[5]/div[3]"
+    runs_in_total_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div:nth-child(5) > div.styles_title__23khW"
+    runs_in_total_value_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div:nth-child(5) > div.styles_metric__14Z7T"
     runs_in_total_title, runs_in_total_metric = extract_box_info(
-        runs_in_total_xpath, runs_in_total_value_xpath)
-
+        runs_in_total_xpath, runs_in_total_value_xpath, by=By.CSS_SELECTOR)
+    print("Title:", runs_in_total_title)
+    print("Metric:", runs_in_total_metric)
     # Extract information for resort info
-    phone_number_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[9]/article/div[2]/div[1]/div/div[2]/p/a"
-    phone_number_xpath, _ = extract_box_info(phone_number_xpath)
-
+    phone_number_css = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_wrapBox__2j8bk > article > div.styles_box__1sXJN.styles_box__16JJ5 > div.styles_innerLeft__DOWs_ > div > div.styles_phone__3mzWV > p > a"
+    phone_number, _ = extract_box_info(phone_number_css, by=By.CSS_SELECTOR)
+    print("phone:", phone_number)
     # Extract information for longest run total
-    longest_run_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[6]/div[2]"
-    longest_run_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[6]/div[3]"
+    longest_run_title_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div:nth-child(6) > div.styles_title__23khW"
+    longest_run_value_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div:nth-child(6) > div.styles_metric__14Z7T"
     longest_run_title, longest_run_metric = extract_box_info(
-        longest_run_title_xpath, longest_run_value_xpath)
-
+        longest_run_title_xpath, longest_run_value_xpath, by=By.CSS_SELECTOR)
+    print("Title:", longest_run_title)
+    print("Metric:", longest_run_metric)
     # Extract information for skiable terrain total
-    skiable_terrain_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[7]/div[2]"
-    skiable_terrain_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[7]/div[3]"
+    skiable_terrain_title_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div:nth-child(7) > div.styles_title__23khW"
+    skiable_terrain_value_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div:nth-child(7) > div.styles_metric__14Z7T"
     skiable_terrain_title, skiable_terrain_metric = extract_box_info(
-        skiable_terrain_title_xpath, skiable_terrain_value_xpath)
-
+        skiable_terrain_title_xpath, skiable_terrain_value_xpath, by=By.CSS_SELECTOR)
+    print("Title:", skiable_terrain_title)
+    print("Metric:", skiable_terrain_metric)
     # Extract information for snow making total
-    snow_making_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[8]/div[2]"
-    snow_making_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[8]/div[3]"
+    snow_making_title_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div:nth-child(8) > div.styles_title__23khW"
+    snow_making_value_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > article:nth-child(6) > div:nth-child(2) > div:nth-child(8) > div.styles_metric__14Z7T"
     snow_making_title, snow_making_metric = extract_box_info(
-        snow_making_title_xpath, snow_making_value_xpath)
-
+        snow_making_title_xpath, snow_making_value_xpath, by=By.CSS_SELECTOR)
+    print("Title:", snow_making_title)
+    print("Metric:", snow_making_metric)
     # Extract information for snow making total
-    night_skiing_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[9]/div[2]"
-    night_skiing_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[8]/div[3]"
-    night_skiing_title_xpath, night_skiing_value_xpath = extract_box_info(
-        night_skiing_title_xpath, night_skiing_value_xpath)
+    #night_skiing_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[8]/div[3]"
+    #night_skiing_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/article[2]/div[2]/div[8]/div[3]"
+    #night_skiing_title_xpath, night_skiing_value_xpath = extract_box_info(
+     #   night_skiing_title_xpath, night_skiing_value_xpath, by=By.CSS_SELECTOR)
+    #print("Title:", night_skiing_title_xpath)
+    #print("Metric:", night_skiing_value_xpath)
     # Extract information for base elevation
-    base_elevation_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[6]/article/div[2]/div[2]"
-    base_elevation_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[6]/article/div[2]/div[3]"
+    base_elevation_title_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div:nth-child(8) > article > div:nth-child(2) > div.styles_title__23khW"
+    base_elevation_value_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div:nth-child(8) > article > div:nth-child(2) > div.styles_metric__14Z7T"
     base_elevation_title, base_elevation_metric = extract_box_info(
-        base_elevation_title_xpath, base_elevation_value_xpath)
-
+        base_elevation_title_xpath, base_elevation_value_xpath, by=By.CSS_SELECTOR)
+    print("Title:", base_elevation_title)
+    print("Metric:", base_elevation_metric)
     # Extract information for summit elevation
-    summit_elevation_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[6]/article/div[3]/div[2]"
-    summit_elevation_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[6]/article/div[3]/div[3]"
+    summit_elevation_title_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div:nth-child(8) > article > div:nth-child(3) > div.styles_title__23khW"
+    summit_elevation_value_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div:nth-child(8) > article > div:nth-child(3) > div.styles_metric__14Z7T"
     summit_elevation_title, summit_elevation_metric = extract_box_info(
-        summit_elevation_title_xpath, summit_elevation_value_xpath)
-
+        summit_elevation_title_xpath, summit_elevation_value_xpath, by=By.CSS_SELECTOR)
+    print("Title:", summit_elevation_title)
+    print("Metric:", summit_elevation_metric)
     # Extract information for vertical drop
-    vertical_elevation_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[6]/article/div[4]/div[2]"
-    vertical_elevation_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[6]/article/div[4]/div[3]"
+    vertical_elevation_title_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div:nth-child(8) > article > div:nth-child(4) > div.styles_title__23khW"
+    vertical_elevation_value_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div:nth-child(8) > article > div:nth-child(4) > div.styles_metric__14Z7T"
     vertical_elevation_title, vertical_elevation_metric = extract_box_info(
-        vertical_elevation_title_xpath, vertical_elevation_value_xpath)
-
+        vertical_elevation_title_xpath, vertical_elevation_value_xpath, by=By.CSS_SELECTOR)
+    print("Title:", vertical_elevation_title)
+    print("Metric:", vertical_elevation_metric)
     # Extract information for average snowfall
-    average_snowfall_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[8]/article/div[2]/div[2]/div[3]/div"
-    average_snowfall_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[8]/article/div[2]/div[2]/div[3]/span"
+    average_snowfall_title_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_importantDates__LELVC > article > div.styles_box__1sXJN.styles_box__1iaJy > div:nth-child(2) > div:nth-child(3) > div"
+    average_snowfall_value_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_importantDates__LELVC > article > div.styles_box__1sXJN.styles_box__1iaJy > div:nth-child(2) > div:nth-child(3) > span"
     average_snowfall_title, average_snowfall_metric = extract_box_info(
-        average_snowfall_title_xpath, average_snowfall_value_xpath)
-
+        average_snowfall_title_xpath, average_snowfall_value_xpath, by=By.CSS_SELECTOR)
+    print("Title:", average_snowfall_title)
+    print("Metric:", average_snowfall_metric)
     # Extract information for years open
-    years_open_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[8]/article/div[2]/div[2]/div[2]/div"
-    years_open_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[8]/article/div[2]/div[2]/div[2]/span"
+    years_open_title_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_importantDates__LELVC > article > div.styles_box__1sXJN.styles_box__1iaJy > div:nth-child(2) > div:nth-child(2) > div"
+    years_open_value_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_importantDates__LELVC > article > div.styles_box__1sXJN.styles_box__1iaJy > div:nth-child(2) > div:nth-child(2) > span"
     years_open_title, years_open_metric = extract_box_info(
-        years_open_title_xpath, years_open_value_xpath)
-
+        years_open_title_xpath, years_open_value_xpath, by=By.CSS_SELECTOR)
+    print("Title:", years_open_title)
+    print("Metric:", years_open_metric)
     # Extract information for days open last year
-    days_open_last_year_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[8]/article/div[2]/div[2]/div[1]/div"
-    days_open_last_year_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[8]/article/div[2]/div[2]/div[1]/span"
+    days_open_last_year_title_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_importantDates__LELVC > article > div.styles_box__1sXJN.styles_box__1iaJy > div:nth-child(2) > div:nth-child(1) > div"
+    days_open_last_year_value_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_importantDates__LELVC > article > div.styles_box__1sXJN.styles_box__1iaJy > div:nth-child(2) > div:nth-child(1) > span"
     days_open_last_year_title, days_open_last_year_metric = extract_box_info(
-        days_open_last_year_title_xpath, days_open_last_year_value_xpath)
-
+        days_open_last_year_title_xpath, days_open_last_year_value_xpath, by=By.CSS_SELECTOR)
+    print("Title:", days_open_last_year_title)
+    print("Metric:", days_open_last_year_metric)
     # Extract information for days open last year
-    projected_opening_title_xpath = " //*[@id='__next']/div[6]/div[3]/div/div[8]/article/div[2]/div[1]/div[1]/div"
-    projected_opening_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[8]/article/div[2]/div[1]/div[1]/span/span[1]"
+    projected_opening_title_xpath = " #__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_importantDates__LELVC > article > div.styles_box__1sXJN.styles_box__1iaJy > div:nth-child(1) > div:nth-child(1) > div"
+    projected_opening_value_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_importantDates__LELVC > article > div.styles_box__1sXJN.styles_box__1iaJy > div:nth-child(1) > div:nth-child(1) > span > span.styles_desktopDate__1Djk-"
     projected_opening_title_xpath, projected_opening_value_xpath = extract_box_info(
-        projected_opening_title_xpath, projected_opening_value_xpath)
-
+        projected_opening_title_xpath, projected_opening_value_xpath, by=By.CSS_SELECTOR)
+    print("Title:", projected_opening_title_xpath)
+    print("Metric:", projected_opening_value_xpath)
     # Extract information for days open last year
-    projected_closing_title_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[8]/article/div[2]/div[1]/div[2]/div"
-    projected_closing_value_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[8]/article/div[2]/div[1]/div[2]/span/span[1]"
+    projected_closing_title_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_importantDates__LELVC > article > div.styles_box__1sXJN.styles_box__1iaJy > div:nth-child(1) > div:nth-child(2) > div"
+    projected_closing_value_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_importantDates__LELVC > article > div.styles_box__1sXJN.styles_box__1iaJy > div:nth-child(1) > div:nth-child(2) > span > span.styles_desktopDate__1Djk-"
     projected_closing_title_xpath, projected_closing_value_xpath = extract_box_info(
-        projected_closing_title_xpath, projected_closing_value_xpath)
+        projected_closing_title_xpath, projected_closing_value_xpath, by=By.CSS_SELECTOR)
+    print("Title:", projected_closing_title_xpath)
+    print("Metric:", projected_closing_value_xpath)
+    print('navigating to table')
     # Navigate to the page with the table
-    table_link_xpath = "//*[@id='__next']/div[6]/div[2]/div/div[2]/a[8]"
+    table_link_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_bestTimeSnow__2KOHq > article > div.styles_box__m1CLQ > div > a"
     table_link = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.XPATH, table_link_xpath))
+        EC.presence_of_element_located((By.CSS_SELECTOR, table_link_xpath))
     )
     table_link.click()
 
@@ -174,44 +198,47 @@ def get_ski_resort_data():
 
     # Check if the table is inside an iframe and switch to it if needed
     # Replace with the actual iframe XPath if applicable
-    iframe_xpath = "//iframe[@id='table-iframe']"
-    if len(driver.find_elements(By.XPATH, iframe_xpath)) > 0:
-        iframe = driver.find_element(By.XPATH, iframe_xpath)
+    iframe_css = "iframe#table-iframe"
+    if len(driver.find_elements(By.CSS_SELECTOR, iframe_css)) > 0:
+        iframe = driver.find_element(By.CSS_SELECTOR, iframe_css)
         driver.switch_to.frame(iframe)
 
-    # Wait for the table to be present and visible
-    table_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[1]/div[1]/div[3]/section/table"
+        # Wait for the table to be present and visible
+    table_css = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_wrap__1Y1Mv > div:nth-child(2) > div.styles_inner__3LR9h.ps > section > table"
     table_element = WebDriverWait(driver, 20).until(
-        EC.visibility_of_element_located((By.XPATH, table_xpath))
+        EC.visibility_of_element_located((By.CSS_SELECTOR, table_css))
     )
 
     # Locate the header row
-    header_row_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[1]/div[1]/div[3]/section/table/thead/tr"
-    header_row = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.XPATH, header_row_xpath))
-    )
+    header_row_css = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_wrap__1Y1Mv > div:nth-child(2) > div.styles_inner__3LR9h.ps > section > table > thead > tr"
+    header_row = table_element.find_element(By.CSS_SELECTOR, header_row_css)
 
     # Extract the headers
-    headers = [cell.text for cell in header_row.find_elements(
-        By.XPATH, "./th/span")]
+    headers = [cell.text for cell in header_row.find_elements(By.CSS_SELECTOR, "th")]
 
-    # Get all the rows in the table
-    rows_xpath = "//*[@id='__next']/div[6]/div[3]/div/div[1]/div[1]/div[3]/section/table/tbody/tr"
-    rows = WebDriverWait(driver, 10).until(
-        EC.presence_of_all_elements_located((By.XPATH, rows_xpath))
-    )
+    # Get all the rows in the table body
+    rows_css = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_wrap__1Y1Mv > div:nth-child(2) > div.styles_inner__3LR9h.ps > section > table > tbody > tr"
+    rows = table_element.find_elements(By.CSS_SELECTOR, rows_css)
 
     data = []
     for row in rows:
-        row_data = {"Month": row.find_element(By.XPATH, "./th/span").text}
-        for i in range(1, len(headers)):
-            column_element = WebDriverWait(row, 10).until(
-                EC.presence_of_element_located((By.XPATH, f"./td[{i}]/span"))
-            )
-            row_data[headers[i]
-                     ] = column_element.text if column_element.text else None
+        row_data = {}
+        
+        # Extract the month value
+        month_cell_css = "th"
+        month_cell = row.find_element(By.CSS_SELECTOR, month_cell_css)
+        row_data["Month"] = month_cell.text
+        
+        # Extract the values for each column
+        columns_css = "td"
+        columns = row.find_elements(By.CSS_SELECTOR, columns_css)
+        for i in range(len(headers) - 1):
+            if i < len(columns):
+                row_data[headers[i + 1]] = columns[i].text
+            else:
+                row_data[headers[i + 1]] = None
+        
         data.append(row_data)
-
     # Prepare the response data
     response_data = {
         'beginner_runs': {'title': clean_data(beginner_title), 'metric': clean_data(beginner_metric)},
@@ -232,7 +259,7 @@ def get_ski_resort_data():
         'total_lifts': {'metric': clean_data(total_lifts_cleaned)},
         'projected_opening': {'title': clean_data(projected_opening_title_xpath), 'metric': clean_data(projected_opening_value_xpath)},
         'projected_closing': {'title': clean_data(projected_closing_title_xpath), 'metric': clean_data(projected_closing_value_xpath)},
-        'phone_number': {'title': clean_data(phone_number_xpath)},
+        ##'phone_number': {'title': clean_data(phone_number_xpath)},
         'table_data': [
             {
                 'Month': clean_data(row['Month']),
