@@ -5,11 +5,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import json
 import re
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 app = Flask(__name__)
 
 
 def clean_data(data):
+    if data is None:
+        return ''  # Return an empty string or a default value
     cleaned_data = re.sub(r'\\"|"', '', data)
     return cleaned_data
 
@@ -31,7 +33,7 @@ def get_ski_resort_data():
 
         try:
             # Wait for the title element to be present (up to 5 seconds)
-            title_element = WebDriverWait(driver, 5).until(
+            title_element = WebDriverWait(driver, 0.3).until(
                 EC.presence_of_element_located((by, title_selector))
             )
             title_text = title_element.text
@@ -41,7 +43,7 @@ def get_ski_resort_data():
         if metric_selector:
             try:
                 # Wait for the metric element to be present (up to 5 seconds)
-                metric_element = WebDriverWait(driver, 5).until(
+                metric_element = WebDriverWait(driver, 0.3).until(
                     EC.presence_of_element_located((by, metric_selector))
                 )
                 metric_text = metric_element.text
@@ -185,60 +187,65 @@ def get_ski_resort_data():
     print("Title:", projected_closing_title_xpath)
     print("Metric:", projected_closing_value_xpath)
     print('navigating to table')
-    # Navigate to the page with the table
-    table_link_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_bestTimeSnow__2KOHq > article > div.styles_box__m1CLQ > div > a"
-    table_link = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.CSS_SELECTOR, table_link_xpath))
-    )
-    table_link.click()
+    try:
+        print('navigating to table')
+        # Navigate to the page with the table
+        table_link_xpath = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_bestTimeSnow__2KOHq > article > div.styles_box__m1CLQ > div > a"
+        table_link = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, table_link_xpath))
+        )
+        table_link.click()
 
-    # Wait for the page to fully load
-    WebDriverWait(driver, 20).until(
-        EC.presence_of_element_located((By.TAG_NAME, 'body')))
+        # Wait for the page to fully load
+        WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.TAG_NAME, 'body')))
 
-    # Check if the table is inside an iframe and switch to it if needed
-    # Replace with the actual iframe XPath if applicable
-    iframe_css = "iframe#table-iframe"
-    if len(driver.find_elements(By.CSS_SELECTOR, iframe_css)) > 0:
-        iframe = driver.find_element(By.CSS_SELECTOR, iframe_css)
-        driver.switch_to.frame(iframe)
+        # Check if the table is inside an iframe and switch to it if needed
+        # Replace with the actual iframe XPath if applicable
+        iframe_css = "iframe#table-iframe"
+        if len(driver.find_elements(By.CSS_SELECTOR, iframe_css)) > 0:
+            iframe = driver.find_element(By.CSS_SELECTOR, iframe_css)
+            driver.switch_to.frame(iframe)
 
         # Wait for the table to be present and visible
-    table_css = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_wrap__1Y1Mv > div:nth-child(2) > div.styles_inner__3LR9h.ps > section > table"
-    table_element = WebDriverWait(driver, 20).until(
-        EC.visibility_of_element_located((By.CSS_SELECTOR, table_css))
-    )
+        table_css = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_wrap__1Y1Mv > div:nth-child(2) > div.styles_inner__3LR9h.ps > section > table"
+        table_element = WebDriverWait(driver, 20).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, table_css))
+        )
 
-    # Locate the header row
-    header_row_css = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_wrap__1Y1Mv > div:nth-child(2) > div.styles_inner__3LR9h.ps > section > table > thead > tr"
-    header_row = table_element.find_element(By.CSS_SELECTOR, header_row_css)
+        # Locate the header row
+        header_row_css = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_wrap__1Y1Mv > div:nth-child(2) > div.styles_inner__3LR9h.ps > section > table > thead > tr"
+        header_row = table_element.find_element(By.CSS_SELECTOR, header_row_css)
 
-    # Extract the headers
-    headers = [cell.text for cell in header_row.find_elements(By.CSS_SELECTOR, "th")]
+        # Extract the headers
+        headers = [cell.text for cell in header_row.find_elements(By.CSS_SELECTOR, "th")]
 
-    # Get all the rows in the table body
-    rows_css = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_wrap__1Y1Mv > div:nth-child(2) > div.styles_inner__3LR9h.ps > section > table > tbody > tr"
-    rows = table_element.find_elements(By.CSS_SELECTOR, rows_css)
+        # Get all the rows in the table body
+        rows_css = "#__next > div.container-xl.content-container > div.styles_layout__2aTIJ.layout-container > div > div.styles_wrap__1Y1Mv > div:nth-child(2) > div.styles_inner__3LR9h.ps > section > table > tbody > tr"
+        rows = table_element.find_elements(By.CSS_SELECTOR, rows_css)
 
-    data = []
-    for row in rows:
-        row_data = {}
-        
-        # Extract the month value
-        month_cell_css = "th"
-        month_cell = row.find_element(By.CSS_SELECTOR, month_cell_css)
-        row_data["Month"] = month_cell.text
-        
-        # Extract the values for each column
-        columns_css = "td"
-        columns = row.find_elements(By.CSS_SELECTOR, columns_css)
-        for i in range(len(headers) - 1):
-            if i < len(columns):
-                row_data[headers[i + 1]] = columns[i].text
-            else:
-                row_data[headers[i + 1]] = None
-        
-        data.append(row_data)
+        data = []
+        for row in rows:
+            row_data = {}
+            
+            # Extract the month value
+            month_cell_css = "th"
+            month_cell = row.find_element(By.CSS_SELECTOR, month_cell_css)
+            row_data["Month"] = month_cell.text
+            
+            # Extract the values for each column
+            columns_css = "td"
+            columns = row.find_elements(By.CSS_SELECTOR, columns_css)
+            for i in range(len(headers) - 1):
+                if i < len(columns):
+                    row_data[headers[i + 1]] = columns[i].text
+                else:
+                    row_data[headers[i + 1]] = None
+            
+            data.append(row_data)
+    except (TimeoutException, NoSuchElementException):
+        print("Table extraction failed. Moving on without table data.")
+        data = []
     # Prepare the response data
     response_data = {
         'beginner_runs': {'title': clean_data(beginner_title), 'metric': clean_data(beginner_metric)},
