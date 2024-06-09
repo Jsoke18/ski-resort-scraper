@@ -4,10 +4,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import json
+import concurrent.futures
 import re
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 app = Flask(__name__)
-
+import requests
 
 def clean_data(data):
     if data is None:
@@ -248,24 +249,24 @@ def get_ski_resort_data():
         data = []
     # Prepare the response data
     response_data = {
-        'beginner_runs': {'title': clean_data(beginner_title), 'metric': clean_data(beginner_metric)},
-        'intermediate_runs': {'title': clean_data(intermediate_title), 'metric': clean_data(intermediate_metric)},
-        'advanced_runs': {'title': clean_data(advanced_title), 'metric': clean_data(advanced_metric)},
-        'expert_runs': {'title': clean_data(expert_title), 'metric': clean_data(expert_metric)},
-        'runs_in_total': {'title': clean_data(runs_in_total_title), 'metric': clean_data(runs_in_total_metric)},
-        'longest_run': {'title': clean_data(longest_run_title), 'metric': clean_data(longest_run_metric)},
-        'skiable_terrain': {'title': clean_data(skiable_terrain_title), 'metric': clean_data(skiable_terrain_metric)},
-        'snow_making': {'title': clean_data(snow_making_title), 'metric': clean_data(snow_making_metric)},
-        'base_elevation': {'title': clean_data(base_elevation_title), 'metric': clean_data(base_elevation_metric)},
-        'summit_elevation': {'title': clean_data(summit_elevation_title), 'metric': clean_data(summit_elevation_metric)},
-        'vertical_drop': {'title': clean_data(vertical_elevation_title), 'metric': clean_data(vertical_elevation_metric)},
-        'average_snowfall': {'title': clean_data(average_snowfall_title), 'metric': clean_data(average_snowfall_metric)},
-        'years_open': {'title': clean_data(years_open_title), 'metric': clean_data(years_open_metric)},
-        'days_open_last_year': {'title': clean_data(days_open_last_year_title), 'metric': clean_data(days_open_last_year_metric)},
-        'resort_info': {'title': clean_data(resort_info)},
+        'beginner_runs': {'metric': clean_data(beginner_metric)},
+        'intermediate_runs': {'metric': clean_data(intermediate_metric)},
+        'advanced_runs': {'metric': clean_data(advanced_metric)},
+        'expert_runs': {'metric': clean_data(expert_metric)},
+        'runs_in_total': {'metric': clean_data(runs_in_total_metric)},
+        'longest_run': {'metric': clean_data(longest_run_metric)},
+        'skiable_terrain': {'metric': clean_data(skiable_terrain_metric)},
+        'snowMaking': {'metric': clean_data(snow_making_metric)},
+        'baseElevation': {'metric': clean_data(base_elevation_metric)},
+        'topElevation': {'metric': clean_data(summit_elevation_metric)},
+        'verticalDrop': {'metric': clean_data(vertical_elevation_metric)},
+        'averageSnowfall': {'metric': clean_data(average_snowfall_metric)},
+        'yearsOpen': {'metric': clean_data(years_open_metric)},
+        'daysOpenLastYear': {'metric': clean_data(days_open_last_year_metric)},
+        'phoneNumber': {'title': clean_data(resort_info)},
         'total_lifts': {'metric': clean_data(total_lifts_cleaned)},
-        'projected_opening': {'title': clean_data(projected_opening_title_xpath), 'metric': clean_data(projected_opening_value_xpath)},
-        'projected_closing': {'title': clean_data(projected_closing_title_xpath), 'metric': clean_data(projected_closing_value_xpath)},
+        'projectedOpening': {'metric': clean_data(projected_opening_value_xpath)},
+        'projectedClosing': {'metric': clean_data(projected_closing_value_xpath)},
         ##'phone_number': {'title': clean_data(phone_number_xpath)},
         'table_data': [
             {
@@ -285,6 +286,7 @@ def get_ski_resort_data():
 
     # Return the formatted JSON response
     return formatted_response, 200, {'Content-Type': 'application/json'}
+
 
 
 @app.route('/ski-resort-lodging', methods=['POST'])
@@ -334,6 +336,118 @@ def get_ski_resort_lodging():
 
     # Return the formatted JSON response
     return formatted_response, 200, {'Content-Type': 'application/json'}
+
+
+
+@app.route('/ski-info-route', methods=['GET'])
+def get_ski_info():
+    # Create a new instance of the Chrome driver
+    driver = webdriver.Chrome()
+
+    # Navigate to the initial page
+    url = 'https://www.skiresort.info/ski-resorts/canada/page/2/'
+    driver.get(url)
+    print(f"Navigated to initial page: {url}")
+
+    ski_resorts_data = []
+    page_number = 2  # Starting from page 2
+    start_scraping = False
+
+    while page_number <= 3:
+        print(f"Scraping page {page_number}...")
+
+        # Find all ski resort links on the current page
+        resort_links = driver.find_elements(By.CSS_SELECTOR, 'div[id^="resort"] > div > div:nth-child(1) > div.col-sm-11.col-xs-10 > div.h3 > a')
+        print(f"Found {len(resort_links)} resort links on page {page_number}")
+
+        for resort_link in resort_links:
+            resort_url = resort_link.get_attribute('href')
+            print(f"Resort URL: {resort_url}")
+
+            if not start_scraping:
+                if resort_url == 'https://www.skiresort.info/ski-resort/vista-ridge/':
+                    start_scraping = True
+                else:
+                    continue
+
+            # Check if the resort URL contains "cat-skiing/" or "heliskiing/"
+            if "cat-skiing/" in resort_url or "heliskiing/" in resort_url:
+                print(f"Skipping resort: {resort_url}")
+                continue
+
+            print(f"Opening resort URL: {resort_url}")
+            driver.execute_script("window.open('');")
+            driver.switch_to.window(driver.window_handles[-1])
+            driver.get(resort_url)
+
+            try:
+                resort_name = clean_data(driver.find_element(By.CSS_SELECTOR, '#c50 > div.subnavi-header > div > div.col-sm-10 > h1 > span > span').text)
+                resort_name = resort_name.replace("Ski resort ", "")  # Remove "Ski resort" from the name
+            except NoSuchElementException:
+                resort_name = ''
+
+            try:
+                description = clean_data(driver.find_element(By.CSS_SELECTOR, '#main-content > div.panel-simple.more-padding > p').text)
+            except NoSuchElementException:
+                description = ''
+
+            try:
+                elevation_data = clean_data(driver.find_element(By.XPATH, '//*[@id="selAlti"]').text)
+            except NoSuchElementException:
+                elevation_data = ''
+
+            if elevation_data:
+                elevation_parts = elevation_data.split(' - ')
+                if len(elevation_parts) == 2:
+                    base_elevation = elevation_parts[0].split(' ')[0]
+                    top_elevation = elevation_parts[1].split(' ')[0]
+                else:
+                    base_elevation, top_elevation = '', ''
+            else:
+                base_elevation, top_elevation = '', ''
+
+            try:
+                lifts_total = clean_data(driver.find_element(By.CSS_SELECTOR, '#main-content > div.panel-simple.more-padding > a.shaded.detail-links.link-img.no-pad-bottom > div.description > div > strong#selLiftstot').text)
+                lifts_total = re.sub(r'\D', '', lifts_total)
+            except NoSuchElementException:
+                lifts_total = ''
+
+            try:
+                skiable_km = clean_data(driver.find_element(By.XPATH, '//*[@id="selSlopetot"]').text)
+            except NoSuchElementException:
+                skiable_km = ''
+
+            ski_resort_data = {
+                'name': resort_name,
+                'information': description,
+                'baseElevation': base_elevation,
+                'topElevation': top_elevation,
+                'totalLifts': lifts_total,
+                'skiable_terrain': skiable_km
+            }
+
+            # Send the individual ski resort data to the /ingest endpoint
+            ingest_url = 'http://localhost:3000/resorts/ingest'
+            response = requests.post(ingest_url, data=ski_resort_data)
+            print(f"Sent data to /ingest endpoint for resort: {resort_name}. Response: {response.status_code}")
+
+            ski_resorts_data.append(ski_resort_data)
+            print(f"Scraped data for resort: {resort_name}")
+
+            driver.close()
+            driver.switch_to.window(driver.window_handles[0])
+
+        # Navigate to the next page
+        page_number += 1
+        if page_number <= 3:
+            next_page_url = f'https://www.skiresort.info/ski-resorts/canada/page/{page_number}/'
+            print(f"Navigating to page {page_number}: {next_page_url}")
+            driver.get(next_page_url)
+
+    driver.quit()
+    print(f"Scraped data for {len(ski_resorts_data)} ski resorts")
+
+    return jsonify(ski_resorts_data)
 
 if __name__ == '__main__':
     app.run()
