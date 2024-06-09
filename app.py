@@ -344,47 +344,71 @@ def get_ski_info():
     # Create a new instance of the Chrome driver
     driver = webdriver.Chrome()
 
-    # Navigate to the initial page
-    url = 'https://www.skiresort.info/ski-resorts/canada/page/2/'
-    driver.get(url)
-    print(f"Navigated to initial page: {url}")
+    # List of URLs to navigate through
+    urls = [
+        'https://www.skiresort.info/ski-resorts/usa/page/2/',
+''    ]
 
     ski_resorts_data = []
-    page_number = 2  # Starting from page 2
-    start_scraping = False
 
-    while page_number <= 3:
-        print(f"Scraping page {page_number}...")
+    for url in urls:
+        print(f"Navigating to page: {url}")
+        driver.get(url)
 
         # Find all ski resort links on the current page
         resort_links = driver.find_elements(By.CSS_SELECTOR, 'div[id^="resort"] > div > div:nth-child(1) > div.col-sm-11.col-xs-10 > div.h3 > a')
-        print(f"Found {len(resort_links)} resort links on page {page_number}")
+        print(f"Found {len(resort_links)} resort links on page")
 
         for resort_link in resort_links:
             resort_url = resort_link.get_attribute('href')
             print(f"Resort URL: {resort_url}")
-
-            if not start_scraping:
-                if resort_url == 'https://www.skiresort.info/ski-resort/vista-ridge/':
-                    start_scraping = True
-                else:
-                    continue
 
             # Check if the resort URL contains "cat-skiing/" or "heliskiing/"
             if "cat-skiing/" in resort_url or "heliskiing/" in resort_url:
                 print(f"Skipping resort: {resort_url}")
                 continue
 
+            # Find the country and province information
+            resort_id = resort_link.find_element(By.XPATH, "..").get_attribute("id")
+            country_xpath = f'//div[@id="{resort_id}"]/div/div[1]/div[2]/div[1]/div/a[2]'
+            province_xpath = f'//div[@id="{resort_id}"]/div/div[1]/div[2]/div[1]/div/a[3]'
+
+            try:
+                country = clean_data(driver.find_element(By.XPATH, country_xpath).text)
+            except NoSuchElementException:
+                country = ''
+
+            try:
+                province = clean_data(driver.find_element(By.XPATH, province_xpath).text)
+            except NoSuchElementException:
+                province = ''
+
             print(f"Opening resort URL: {resort_url}")
             driver.execute_script("window.open('');")
             driver.switch_to.window(driver.window_handles[-1])
             driver.get(resort_url)
 
-            try:
-                resort_name = clean_data(driver.find_element(By.CSS_SELECTOR, '#c50 > div.subnavi-header > div > div.col-sm-10 > h1 > span > span').text)
-                resort_name = resort_name.replace("Ski resort ", "")  # Remove "Ski resort" from the name
-            except NoSuchElementException:
-                resort_name = ''
+
+            fallback_name_selectors = [
+                '#c50 > div > div:nth-child(3) > div.subnavi-header > div > div.col-sm-10 > h1 > span > span',
+                '//*[@id="c50"]/div/div[3]/div[1]/div/div[1]/h1/span/span',
+                '//*[@id="c50"]/div[1]/div/div[1]/h1/span/span'
+            ]
+
+            resort_name = ''
+            for selector in fallback_name_selectors:
+                try:
+                    if selector.startswith('/'):
+                        resort_name = clean_data(driver.find_element(By.XPATH, selector).text)
+                    else:
+                        resort_name = clean_data(driver.find_element(By.CSS_SELECTOR, selector).text)
+                    resort_name = resort_name.replace("Ski resort ", "")  # Remove "Ski resort" from the name
+                    break
+                except NoSuchElementException:
+                    continue
+
+            if not resort_name:
+                print(f"Resort name not found for URL: {resort_url}")
 
             try:
                 description = clean_data(driver.find_element(By.CSS_SELECTOR, '#main-content > div.panel-simple.more-padding > p').text)
@@ -410,23 +434,53 @@ def get_ski_info():
                 lifts_total = clean_data(driver.find_element(By.CSS_SELECTOR, '#main-content > div.panel-simple.more-padding > a.shaded.detail-links.link-img.no-pad-bottom > div.description > div > strong#selLiftstot').text)
                 lifts_total = re.sub(r'\D', '', lifts_total)
             except NoSuchElementException:
-                lifts_total = ''
+                lifts_total = '0'
+
+            try:
+                gondolas_element = driver.find_element(By.XPATH, '//*[@id="main-content"]/div[1]/a[21]/div[2]/div[1]/div[1]')
+                gondolas = clean_data(gondolas_element.find_element(By.XPATH, './span').text)
+                gondolas = re.sub(r'\D', '', gondolas)
+            except NoSuchElementException:
+                gondolas = '0'
+
+            # Subtract gondolas from total lifts if a value for gondolas is found
+            if gondolas != '0':
+                lifts_total = str(int(lifts_total) - int(gondolas))
 
             try:
                 skiable_km = clean_data(driver.find_element(By.XPATH, '//*[@id="selSlopetot"]').text)
             except NoSuchElementException:
                 skiable_km = ''
 
+            # Navigate to the "Ski Runs / Pistes" section
+            try:
+                ski_runs_link = driver.find_element(By.XPATH, '//*[@id="c50"]/div/div[3]/div[2]/div[1]/ul/li[1]/div/ul/li[6]/a')
+                ski_runs_link.click()
+                print(f"Navigated to Ski Runs / Pistes section for resort: {resort_name}")
+            except NoSuchElementException:
+                print(f"Ski Runs / Pistes section not found for resort: {resort_name}")
+                longest_run = ''
+            else:
+                try:
+                    longest_run = clean_data(driver.find_element(By.XPATH, '//*[@id="main-content"]/div[1]/div[6]/div[2]/ul/li').text)
+                except NoSuchElementException:
+                    longest_run = ''
+
+
             ski_resort_data = {
                 'name': resort_name,
+                'country': country,
+                'province': province,
                 'information': description,
                 'baseElevation': base_elevation,
                 'topElevation': top_elevation,
-                'totalLifts': lifts_total,
-                'skiable_terrain': skiable_km
+                'lifts': json.dumps({'total': int(lifts_total)}),
+                'gondolas': int(gondolas),
+                'skiable_terrain': skiable_km,
+                'longestRun': longest_run
             }
 
-            # Send the individual ski resort data to the /ingest endpoint
+            # Send the data to the /ingest endpoint
             ingest_url = 'http://localhost:3000/resorts/ingest'
             response = requests.post(ingest_url, data=ski_resort_data)
             print(f"Sent data to /ingest endpoint for resort: {resort_name}. Response: {response.status_code}")
@@ -436,13 +490,6 @@ def get_ski_info():
 
             driver.close()
             driver.switch_to.window(driver.window_handles[0])
-
-        # Navigate to the next page
-        page_number += 1
-        if page_number <= 3:
-            next_page_url = f'https://www.skiresort.info/ski-resorts/canada/page/{page_number}/'
-            print(f"Navigating to page {page_number}: {next_page_url}")
-            driver.get(next_page_url)
 
     driver.quit()
     print(f"Scraped data for {len(ski_resorts_data)} ski resorts")
