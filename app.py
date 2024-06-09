@@ -346,7 +346,7 @@ def get_ski_info():
 
     # List of URLs to navigate through
     urls = [
-        'https://www.skiresort.info/ski-resorts/usa/page/2/',
+        'https://www.skiresort.info/ski-resorts/usa/page/4/',
 ''    ]
 
     ski_resorts_data = []
