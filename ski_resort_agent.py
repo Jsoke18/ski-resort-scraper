@@ -10,14 +10,19 @@ os.environ["LANGCHAIN_VERBOSE"] = "true"
 litellm.set_verbose = True
 os.environ["SERPER_API_KEY"] = os.getenv("SERPER_API_KEY") or "77a5c2cf36eac1a2f5ad36b7d21437ae3df1bf96"
 
+# === DeepSeek API Key ===
+# Get your API key from https://platform.deepseek.com/api_keys
+os.environ["DEEPSEEK_API_KEY"] = os.getenv("DEEPSEEK_API_KEY")
+
 from crewai import Agent, Task, Crew, Process, LLM
 from crewai_tools import SerperDevTool
 from api_tools import GetResortsTool, GetAllSkiPassesTool, AssignSkiPassToResortTool
 
-# === Setup LLM with Ollama ===
-ollama_llm = LLM(
-    model="ollama/gemma3:lastest",
-    base_url="http://localhost:11434"
+# === Setup LLM with DeepSeek API ===
+deepseek_llm = LLM(
+    model="deepseek/deepseek-chat",
+    api_key=os.getenv("DEEPSEEK_API_KEY"),
+    base_url="https://api.deepseek.com"
 )
 
 # === Tool Setup ===
@@ -45,7 +50,7 @@ ski_pass_manager_agent = Agent(
     verbose=True,
     allow_delegation=False,
     tools=[search_tool, get_resorts_tool, get_all_ski_passes_tool, assign_ski_pass_tool],
-    llm=ollama_llm
+    llm=deepseek_llm
 )
 
 # === Task ===
@@ -84,13 +89,19 @@ ski_pass_crew = Crew(
 # === Execute ===
 if __name__ == "__main__":
     print("Starting the ski pass update crew...")
-    print("Ensure Ollama is running (http://localhost:11434) with the model pulled.")
-    print(f"Using Ollama model: {ollama_llm.model}")
+    print("Using DeepSeek API with deepseek-chat model")
+    print(f"Using DeepSeek model: {deepseek_llm.model}")
+    
+    if not os.getenv("DEEPSEEK_API_KEY"):
+        print("Error: DEEPSEEK_API_KEY not found. Please set it in your .env file or environment.")
+        print("Get your API key from: https://platform.deepseek.com/api_keys")
+        exit(1)
+    
     if not os.getenv("YOUR_API_BASE_URL_IN_API_TOOLS_PY"): # A reminder to set it in api_tools.py
         print("IMPORTANT: Remember to set YOUR_API_BASE_URL in api_tools.py before running!")
+    
     if not os.getenv("SERPER_API_KEY"):
-        print("Error: SERPER_API_KEY not found. Please set it in your .env or environment.")
-        # exit(1) # You might want to exit if essential keys are missing
+        print("Warning: SERPER_API_KEY not found. Web search capabilities may be limited.")
 
     if "task is not properly configured" in task_description:
         print(f"Error: {task_description}")
@@ -103,3 +114,7 @@ if __name__ == "__main__":
             print(result)
         except Exception as e:
             print(f"❌ Error running the crew: {e}")
+            print("Common issues to check:")
+            print("1. Verify DEEPSEEK_API_KEY is set correctly in your .env file")
+            print("2. Check your DeepSeek API quota and billing status")
+            print("3. Ensure network connectivity to api.deepseek.com")
